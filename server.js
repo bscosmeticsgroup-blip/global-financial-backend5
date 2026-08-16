@@ -125,8 +125,6 @@ app.get('/api/status', (req, res) => {
   });
 });
 
-const isPlainObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
-
 app.get('/api/wfirma-sync', async (req, res) => {
   try {
     if (WFIRMA_API_URL) {
