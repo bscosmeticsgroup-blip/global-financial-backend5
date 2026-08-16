@@ -12,7 +12,11 @@ app.get('/', (req, res) => {
   res.json({
     service: 'global-financial-backend2',
     status: 'ok',
-    message: 'API is running.'
+    message: 'API is running.',
+    endpoints: {
+      health: '/health',
+      wfirmaSync: '/api/wfirma-sync'
+    }
   });
 });
 
