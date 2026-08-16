@@ -8,7 +8,28 @@ const WFIRMA_API_URL = process.env.WFIRMA_API_URL || '';
 const WFIRMA_API_TOKEN = process.env.WFIRMA_API_TOKEN || '';
 const WFIRMA_API_KEY = process.env.WFIRMA_API_KEY || '';
 
-const isPlainObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
+const buildSampleInvoices = () => [
+  {
+    id: 'WF-INV-1001',
+    number: 'FV/2026/1001',
+    customer: 'Global Financial OS',
+    amount: 1250.5,
+    currency: 'PLN',
+    dueDate: '2026-08-25',
+    status: 'issued'
+  },
+  {
+    id: 'WF-INV-1002',
+    number: 'FV/2026/1002',
+    customer: 'Northwind Retail',
+    amount: 870.0,
+    currency: 'PLN',
+    dueDate: '2026-08-29',
+    status: 'paid'
+  }
+];
+
+const isPlainObjectValue = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 
 const toJsonError = (status, error, details) => ({
   status: 'error',
@@ -107,6 +128,52 @@ app.get('/api', (req, res) => {
   });
 });
 
+app.get('/browser', (req, res) => {
+  const html = `
+    <!doctype html>
+    <html lang="pl">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Global Financial Backend</title>
+        <style>
+          body { font-family: Arial, sans-serif; max-width: 900px; margin: 40px auto; padding: 20px; }
+          button { padding: 10px 18px; border: none; border-radius: 8px; background: #0b5fff; color: white; cursor: pointer; }
+          pre { background: #f4f4f4; padding: 16px; border-radius: 8px; overflow: auto; }
+        </style>
+      </head>
+      <body>
+        <h1>Global Financial Backend</h1>
+        <button id="loadBtn">Pobierz dane z API</button>
+        <pre id="output">Kliknij przycisk, aby pobrać dane.</pre>
+
+        <script>
+          const API_URL = 'https://global-financial-backend5.onrender.com';
+          const output = document.getElementById('output');
+
+          document.getElementById('loadBtn').addEventListener('click', async () => {
+            output.textContent = 'Ładowanie...';
+            try {
+              const res = await fetch(API_URL + '/api/wfirma-sync', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ customerId: 'CUST-001', syncType: 'full' })
+              });
+
+              const data = await res.json();
+              output.textContent = JSON.stringify(data, null, 2);
+            } catch (error) {
+              output.textContent = 'Błąd połączenia: ' + error.message;
+            }
+          });
+        </script>
+      </body>
+    </html>
+  `;
+
+  res.type('html').send(html);
+});
+
 app.get('/api/status', (req, res) => {
   const memory = process.memoryUsage();
 
@@ -124,8 +191,6 @@ app.get('/api/status', (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
-
-const isPlainObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
 
 app.get('/api/wfirma-sync', async (req, res) => {
   try {
@@ -215,7 +280,7 @@ app.post('/api/wfirma-sync', async (req, res) => {
   try {
     const body = req.body;
 
-    if (!isPlainObject(body)) {
+    if (!isPlainObjectValue(body)) {
       return res.status(400).json(toJsonError(400, 'Invalid request body', 'Expected a JSON object.'));
     }
 
