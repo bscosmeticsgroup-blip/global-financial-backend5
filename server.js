@@ -15,6 +15,8 @@ app.get('/', (req, res) => {
     message: 'API is running.',
     endpoints: {
       health: '/health',
+      api: '/api',
+      status: '/api/status',
       wfirmaSync: '/api/wfirma-sync'
     }
   });
@@ -28,9 +30,43 @@ app.get('/health', (req, res) => {
   });
 });
 
+app.get('/api', (req, res) => {
+  res.status(200).json({
+    service: 'global-financial-backend2',
+    status: 'ok',
+    description: 'Backend for Global Financial OS',
+    availableEndpoints: [
+      '/health',
+      '/api',
+      '/api/status',
+      '/api/wfirma-sync'
+    ],
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.get('/api/status', (req, res) => {
+  const memory = process.memoryUsage();
+
+  res.status(200).json({
+    status: 'ok',
+    service: 'global-financial-backend2',
+    uptimeSeconds: Number(process.uptime().toFixed(2)),
+    nodeVersion: process.version,
+    platform: process.platform,
+    memoryUsage: {
+      rss: `${Math.round(memory.rss / 1024 / 1024)} MB`,
+      heapUsed: `${Math.round(memory.heapUsed / 1024 / 1024)} MB`,
+      heapTotal: `${Math.round(memory.heapTotal / 1024 / 1024)} MB`
+    },
+    timestamp: new Date().toISOString()
+  });
+});
+
 app.get('/api/wfirma-sync', async (req, res) => {
   try {
     res.status(200).json({
+      status: 'ok',
       count: 0,
       invoices: [],
       message: 'Backend Render działa poprawnie. Brak danych wFirma.'
